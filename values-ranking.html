@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Values Ranking Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:       #1a1a2e;
+    --paper:     #f5f0e8;
+    --cream:     #ede7d9;
+    --accent:    #c0392b;
+    --gold:      #b8860b;
+    --muted:     #7a7065;
+    --yes-bg:    #e8f4ee;
+    --yes-border:#2e7d52;
+    --no-bg:     #faeaea;
+    --no-border: #c0392b;
+    --shadow:    rgba(26,26,46,0.12);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+  }
+
+  /* Subtle texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(184,134,11,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(192,57,43,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 640px;
+    position: relative;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; animation: fadeIn 0.5s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border: 1px solid var(--cream);
+    border-radius: 4px;
+    padding: 2.5rem 2.8rem;
+    box-shadow: 0 4px 24px var(--shadow), 0 1px 0 var(--cream);
+    position: relative;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px;
+    right: -6px; bottom: -6px;
+    border: 1px solid var(--cream);
+    border-radius: 4px;
+    z-index: -1;
+  }
+
+  /* ── HEADER ── */
+  .eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 0.8rem;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--ink);
+    margin-bottom: 0.6rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin: 1.5rem 0;
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--cream);
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    margin-bottom: 2rem;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    letter-spacing: 0.05em;
+  }
+  .progress-bar {
+    height: 3px;
+    background: var(--cream);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--accent));
+    border-radius: 99px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── VALUE DISPLAY ── */
+  .value-stage {
+    text-align: center;
+    padding: 1.5rem 0 2rem;
+  }
+
+  .value-number {
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+  }
+
+  .value-word {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+    transition: all 0.3s ease;
+  }
+
+  .value-desc {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 380px;
+    margin: 0 auto;
+  }
+
+  /* ── CHOICE BUTTONS ── */
+  .choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 0.9rem 1.2rem;
+    border-radius: 3px;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .btn-yes {
+    background: var(--yes-bg);
+    border-color: var(--yes-border);
+    color: var(--yes-border);
+  }
+  .btn-yes:hover {
+    background: var(--yes-border);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46,125,82,0.25);
+  }
+
+  .btn-no {
+    background: var(--no-bg);
+    border-color: var(--no-border);
+    color: var(--no-border);
+  }
+  .btn-no:hover {
+    background: var(--no-border);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(192,57,43,0.25);
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: #fff;
+    width: 100%;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+  .btn-primary:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(192,57,43,0.3);
+  }
+
+  /* ── CHIP GRID (whittle phases) ── */
+  .instruction-box {
+    background: var(--cream);
+    border-left: 3px solid var(--gold);
+    padding: 0.9rem 1.1rem;
+    border-radius: 0 3px 3px 0;
+    font-size: 0.83rem;
+    color: var(--ink);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
+  .chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .chip {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.88rem;
+    padding: 0.45rem 1rem;
+    border: 1.5px solid var(--ink);
+    border-radius: 99px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    background: #fff;
+    color: var(--ink);
+    user-select: none;
+  }
+
+  .chip:hover {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .chip.selected {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  .chip.eliminated {
+    background: var(--cream);
+    color: var(--muted);
+    border-color: var(--cream);
+    text-decoration: line-through;
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .chip-counter {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .chip-counter strong {
+    color: var(--accent);
+    font-size: 1rem;
+  }
+
+  /* ── FINAL LIST ── */
+  .final-list {
+    counter-reset: values;
+    list-style: none;
+    margin: 1.2rem 0 1.8rem;
+  }
+
+  .final-list li {
+    counter-increment: values;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--cream);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+  }
+
+  .final-list li::before {
+    content: counter(values, decimal-leading-zero);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    min-width: 2rem;
+  }
+
+  /* ── PHASE TAG ── */
+  .phase-tag {
+    display: inline-block;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: #fff;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+  }
+
+  /* ── FLIP ANIMATION ── */
+  @keyframes cardFlip {
+    0%   { opacity: 1; transform: scale(1); }
+    50%  { opacity: 0; transform: scale(0.92); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .flipping { animation: cardFlip 0.35s ease; }
+
+  @media (max-width: 480px) {
+    .card { padding: 1.8rem 1.4rem; }
+    h1 { font-size: 1.6rem; }
+    .value-word { font-size: 2.1rem; }
+    .choices { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ SCREEN 1: START ══ -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <div class="eyebrow">Personal Values Inventory</div>
+      <h1>What Matters Most to You?</h1>
+      <p class="subtitle">
+        You'll be shown a series of personal values one at a time. For each one, decide:
+        <em>Is this important to me?</em> Keep the ones that resonate. Then you'll narrow
+        your list down to your top 10 — and finally your top 5.
+      </p>
+      <div class="divider">how it works</div>
+      <p class="subtitle" style="margin-bottom:2rem;">
+        There are no right or wrong answers. Trust your instincts and choose what genuinely
+        reflects your priorities, not what you think you <em>should</em> value.
+      </p>
+      <button class="btn btn-primary" onclick="startActivity()">Begin the Activity →</button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 2: SORTING PHASE ══ -->
+  <div class="screen" id="screen-sort">
+    <div class="card" id="sort-card">
+      <div class="phase-tag">Phase 1 of 3 — Sorting</div>
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span id="progress-text">Value 1 of 30</span>
+          <span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      </div>
+
+      <div class="value-stage">
+        <div class="value-number" id="sort-value-number">Value 01</div>
+        <div class="value-word" id="sort-value-word">—</div>
+        <div class="value-desc" id="sort-value-desc"></div>
+      </div>
+
+      <p style="text-align:center; font-size:0.78rem; color:var(--muted); margin-bottom:1rem;">
+        Is this value important to you?
+      </p>
+
+      <div class="choices">
+        <button class="btn btn-yes" onclick="sortValue(true)">✓ &nbsp;Yes, keep it</button>
+        <button class="btn btn-no"  onclick="sortValue(false)">✕ &nbsp;Not for me</button>
+      </div>
+      <div style="text-align:center; margin-top:1.4rem;">
+        <button onclick="restart()" style="background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px;">↩ Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 3: WHITTLE TO 10 ══ -->
+  <div class="screen" id="screen-10">
+    <div class="card">
+      <div class="phase-tag">Phase 2 of 3 — Narrow to 10</div>
+      <h2>Narrow Your List</h2>
+      <div class="instruction-box">
+        You marked <strong id="kept-count">—</strong> values as important. Now whittle that
+        down to your <strong>top 10</strong>. Click a value to <strong>eliminate</strong> it. Click it again to restore it.
+      </div>
+      <div class="chip-counter">Remaining: <strong id="remaining-10">—</strong></div>
+      <div class="chip-grid" id="chip-grid-10"></div>
+      <button class="btn btn-primary" id="btn-continue-10" onclick="goTo5()" disabled>
+        Continue with these 10 →
+      </button>
+      <div style="text-align:center; margin-top:1rem;">
+        <button onclick="restart()" style="background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px;">↩ Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 4: WHITTLE TO 5 ══ -->
+  <div class="screen" id="screen-5">
+    <div class="card">
+      <div class="phase-tag">Phase 3 of 3 — Narrow to 5</div>
+      <h2>Your Core Five</h2>
+      <div class="instruction-box">
+        Almost there. From your 10, choose your <strong>5 most essential values</strong>.
+        These are the principles at the heart of who you are. Click to eliminate; click again to restore.
+      </div>
+      <div class="chip-counter">Remaining: <strong id="remaining-5">10</strong></div>
+      <div class="chip-grid" id="chip-grid-5"></div>
+      <button class="btn btn-primary" id="btn-continue-5" onclick="showFinal()" disabled>
+        These are my top 5 →
+      </button>
+      <div style="text-align:center; margin-top:1rem;">
+        <button onclick="restart()" style="background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--muted);text-decoration:underline;text-underline-offset:3px;">↩ Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 5: FINAL ══ -->
+  <div class="screen" id="screen-final">
+    <div class="card">
+      <div class="eyebrow">Activity Complete</div>
+      <h2>Your Five Core Values</h2>
+      <p class="subtitle">These are the values you identified as most central to who you are.</p>
+      <ul class="final-list" id="final-list"></ul>
+      <div class="divider">reflect</div>
+      <p class="subtitle" style="margin-bottom:1.8rem;">
+        Consider: Do these five surprise you? How do they show up — or not show up — in
+        your daily decisions, relationships, and goals?
+      </p>
+      <button class="btn btn-primary" onclick="restart()">← Start Over</button>
+    </div>
+  </div>
+
+
+  <!-- ══ SCREEN: TOO FEW ══ -->
+  <div class="screen" id="screen-toofew">
+    <div class="card">
+      <div class="eyebrow">Not Quite</div>
+      <h2>You Need at Least 10</h2>
+      <p class="subtitle">
+        You marked only <strong id="toofew-count">—</strong> value<span id="toofew-plural"></span> as important —
+        but this activity requires at least <strong>10</strong> to work with.
+      </p>
+      <p class="subtitle" style="margin-bottom: 2rem;">
+        That's okay. Sometimes our first pass is more selective than we realize.
+        Try going through the list again with a slightly more open mind —
+        consider values that feel <em>somewhat</em> important, not just essential.
+      </p>
+      <button class="btn btn-primary" onclick="startActivity()">Try Again →</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  VALUES LIST  —  Edit this array to customize
+// ═══════════════════════════════════════════════
+const VALUES = [
+  { word: "Authenticity",   desc: "Being genuine and true to yourself in all circumstances." },
+  { word: "Autonomy",       desc: "Having the freedom to make your own choices and direct your own life." },
+  { word: "Compassion",     desc: "Feeling and acting on genuine concern for others' well-being." },
+  { word: "Courage",        desc: "Acting on your convictions even when it's difficult or risky." },
+  { word: "Creativity",     desc: "Expressing yourself through original ideas, art, or innovation." },
+  { word: "Curiosity",      desc: "Pursuing knowledge and new experiences with an open mind." },
+  { word: "Discipline",     desc: "Maintaining commitment and self-control to reach your goals." },
+  { word: "Empathy",        desc: "Understanding and sharing the feelings of others deeply." },
+  { word: "Equality",       desc: "Believing all people deserve the same rights and opportunities." },
+  { word: "Excellence",     desc: "Striving to do your very best in everything you undertake." },
+  { word: "Fairness",       desc: "Making decisions based on consistent, impartial principles." },
+  { word: "Faith",          desc: "Finding meaning and guidance through spiritual or religious belief." },
+  { word: "Family",         desc: "Prioritizing deep connection and commitment to those you love." },
+  { word: "Freedom",        desc: "Living without unnecessary constraints on thought or action." },
+  { word: "Gratitude",      desc: "Recognizing and appreciating the good in your life." },
+  { word: "Growth",         desc: "Continuously developing yourself intellectually and personally." },
+  { word: "Honesty",        desc: "Telling the truth and acting with transparency, even when hard." },
+  { word: "Humility",       desc: "Recognizing your limitations and remaining open to being wrong." },
+  { word: "Integrity",      desc: "Aligning your actions with your values, especially when unobserved." },
+  { word: "Justice",        desc: "Standing up for what is right and fighting against injustice." },
+  { word: "Kindness",       desc: "Acting with warmth and generosity toward others." },
+  { word: "Leadership",     desc: "Guiding, inspiring, and supporting others toward shared goals." },
+  { word: "Loyalty",        desc: "Staying committed to people and causes you believe in." },
+  { word: "Resilience",     desc: "Recovering and adapting in the face of adversity and setbacks." },
+  { word: "Responsibility", desc: "Owning the consequences of your choices and fulfilling your duties." },
+  { word: "Security",       desc: "Valuing stability, safety, and predictability in your life." },
+  { word: "Service",        desc: "Contributing to something greater than yourself through giving." },
+  { word: "Simplicity",     desc: "Finding value in the essential and stripping away the unnecessary." },
+  { word: "Spirituality",   desc: "Seeking connection to something beyond the material world." },
+  { word: "Wisdom",         desc: "Applying knowledge and experience with sound judgment." },
+];
+
+// ═══════════════════════════════
+//  STATE
+// ═══════════════════════════════
+let shuffled = [];
+let currentIdx = 0;
+let keptValues = [];
+let top10 = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ═══════════════════════════════
+//  PHASE 1 — SORTING
+// ═══════════════════════════════
+function startActivity() {
+  shuffled = shuffle(VALUES);
+  currentIdx = 0;
+  keptValues = [];
+  showScreen('screen-sort');
+  renderSortCard();
+}
+
+function renderSortCard(flip = false) {
+  const card = document.getElementById('sort-card');
+  if (flip) {
+    card.classList.add('flipping');
+    setTimeout(() => {
+      card.classList.remove('flipping');
+      _fillSortCard();
+    }, 175);
+  } else {
+    _fillSortCard();
+  }
+}
+
+function _fillSortCard() {
+  const v = shuffled[currentIdx];
+  const n = currentIdx + 1;
+  const total = shuffled.length;
+  const pct = Math.round((n - 1) / total * 100);
+
+  document.getElementById('sort-value-number').textContent =
+    'Value ' + String(n).padStart(2, '0');
+  document.getElementById('sort-value-word').textContent = v.word;
+  document.getElementById('sort-value-desc').textContent = v.desc;
+  document.getElementById('progress-text').textContent = `Value ${n} of ${total}`;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function sortValue(keep) {
+  if (keep) keptValues.push(shuffled[currentIdx]);
+  currentIdx++;
+  if (currentIdx >= shuffled.length) {
+    finishSorting();
+  } else {
+    renderSortCard(true);
+  }
+}
+
+function finishSorting() {
+  if (keptValues.length < 10) {
+    // Too few — show error screen
+    document.getElementById('toofew-count').textContent = keptValues.length;
+    document.getElementById('toofew-plural').textContent = keptValues.length === 1 ? '' : 's';
+    showScreen('screen-toofew');
+  } else if (keptValues.length === 10) {
+    // Exactly 10 — skip straight to whittle-to-5
+    top10 = [...keptValues];
+    buildWhittleScreen('screen-5', 'chip-grid-5', 'remaining-5', 'btn-continue-5', top10, 5, onDone5);
+    showScreen('screen-5');
+  } else {
+    // More than 10 — whittle to 10 first
+    document.getElementById('kept-count').textContent = keptValues.length;
+    buildWhittleScreen('screen-10', 'chip-grid-10', 'remaining-10', 'btn-continue-10', keptValues, 10, onDone10);
+    showScreen('screen-10');
+  }
+}
+
+// ═══════════════════════════════
+//  PHASE 2 — WHITTLE TO 10
+// ═══════════════════════════════
+let top5 = [];
+
+function buildWhittleScreen(screenId, gridId, counterId, btnId, source, target, onDone) {
+  const grid = document.getElementById(gridId);
+  const counter = document.getElementById(counterId);
+  const btn = document.getElementById(btnId);
+  grid.innerHTML = '';
+
+  const eliminated = new Set();
+  let remaining = source.length;
+
+  function refresh() {
+    counter.textContent = remaining;
+    btn.disabled = remaining !== target;
+  }
+
+  source.forEach((v, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = v.word;
+    chip.setAttribute('title', v.desc || '');
+    chip.onclick = () => {
+      if (eliminated.has(i)) {
+        // Restore
+        chip.classList.remove('eliminated');
+        eliminated.delete(i);
+        remaining++;
+      } else {
+        // Eliminate — only if we still have room to cut
+        if (remaining <= target) return;
+        chip.classList.add('eliminated');
+        eliminated.add(i);
+        remaining--;
+      }
+      refresh();
+    };
+    grid.appendChild(chip);
+  });
+
+  refresh();
+
+  btn.onclick = () => {
+    const kept = source.filter((_, i) => !eliminated.has(i));
+    onDone(kept);
+  };
+}
+
+function onDone10(kept) {
+  top10 = kept;
+  buildWhittleScreen('screen-5', 'chip-grid-5', 'remaining-5', 'btn-continue-5', top10, 5, onDone5);
+  showScreen('screen-5');
+}
+
+function onDone5(kept) {
+  top5 = kept;
+  showFinal();
+}
+
+// Stub — real handler set dynamically by buildWhittleScreen
+function goTo5() {}
+
+// ═══════════════════════════════
+//  PHASE 3 — FINAL
+// ═══════════════════════════════
+function showFinal() {
+  const list = document.getElementById('final-list');
+  list.innerHTML = '';
+  const display = top5.length ? top5 : top10;
+  display.forEach(v => {
+    const li = document.createElement('li');
+    li.textContent = v.word;
+    list.appendChild(li);
+  });
+  showScreen('screen-final');
+}
+
+function restart() {
+  showScreen('screen-start');
+}
+</script>
+</body>
+</html>
