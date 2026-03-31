@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Social Issues Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink:    #1a1a2e;
+    --paper:  #f5f0e8;
+    --cream:  #ede7d9;
+    --accent: #c0392b;
+    --gold:   #b8860b;
+    --muted:  #7a7065;
+    --shadow: rgba(26,26,46,0.12);
+    --cat-1: #2e7d52;
+    --cat-2: #1a5f8a;
+    --cat-3: #7b3fa0;
+    --cat-4: #c0392b;
+    --cat-5: #b8860b;
+    --cat-6: #2e6b7a;
+    --cat-7: #8a4a1a;
+    --cat-8: #4a6e1a;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(184,134,11,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(192,57,43,0.05) 0%, transparent 50%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { width: 100%; max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .screen { display: none; animation: fadeIn 0.5s ease; }
+  .screen.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: #fff;
+    border: 1px solid var(--cream);
+    border-radius: 4px;
+    padding: 2.5rem 2.8rem;
+    box-shadow: 0 4px 24px var(--shadow), 0 1px 0 var(--cream);
+    position: relative;
+  }
+  .card::after {
+    content: '';
+    position: absolute;
+    top: 6px; left: 6px; right: -6px; bottom: -6px;
+    border: 1px solid var(--cream);
+    border-radius: 4px; z-index: -1;
+  }
+
+  .eyebrow {
+    font-size: 0.65rem; font-weight: 500; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 0.5rem;
+  }
+  h1 { font-family: 'Playfair Display', serif; font-size: 2rem; line-height: 1.2; color: var(--ink); margin-bottom: 0.8rem; }
+  h2 { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--ink); margin-bottom: 0.5rem; }
+  .subtitle { font-size: 0.9rem; color: var(--muted); line-height: 1.6; margin-bottom: 1.5rem; }
+
+  .phase-tag {
+    display: inline-block; font-size: 0.62rem; letter-spacing: 0.2em;
+    text-transform: uppercase; background: var(--ink); color: #fff;
+    padding: 0.2rem 0.6rem; border-radius: 2px; margin-bottom: 1rem;
+  }
+
+  .divider {
+    display: flex; align-items: center; gap: 0.8rem; margin: 1.5rem 0;
+    color: var(--muted); font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--cream); }
+
+  .btn {
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+    letter-spacing: 0.06em; padding: 0.9rem 1.2rem; border-radius: 3px;
+    border: 1.5px solid; cursor: pointer; transition: all 0.18s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+  }
+  .btn-primary {
+    background: var(--ink); border-color: var(--ink); color: #fff;
+    width: 100%; padding: 1rem; font-size: 0.9rem;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent); border-color: var(--accent);
+    transform: translateY(-2px); box-shadow: 0 4px 16px rgba(192,57,43,0.3);
+  }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .instruction-box {
+    background: var(--cream); border-left: 3px solid var(--gold);
+    padding: 0.9rem 1.1rem; border-radius: 0 3px 3px 0;
+    font-size: 0.83rem; color: var(--ink); line-height: 1.6; margin-bottom: 1.2rem;
+  }
+
+  .chip-counter { text-align: right; font-size: 0.78rem; color: var(--muted); margin-bottom: 1.2rem; }
+  .chip-counter strong { color: var(--accent); font-size: 1rem; }
+
+  .category-section { margin-bottom: 1.6rem; }
+  .category-header { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.7rem; }
+  .category-label {
+    font-size: 0.62rem; font-weight: 500; letter-spacing: 0.18em;
+    text-transform: uppercase; color: #fff; padding: 0.2rem 0.65rem; border-radius: 2px;
+    white-space: nowrap;
+  }
+  .category-rule { flex: 1; height: 1px; opacity: 0.25; }
+
+  .chip-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  .chip {
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    padding: 0.4rem 0.9rem; border-radius: 99px; border: 1.5px solid;
+    cursor: pointer; transition: all 0.18s ease; background: #fff;
+    user-select: none; line-height: 1.4;
+  }
+  .chip:hover:not(.eliminated) { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+  .chip.eliminated {
+    background: var(--cream) !important; color: var(--muted) !important;
+    border-color: var(--cream) !important; text-decoration: line-through;
+    opacity: 0.5; transform: none !important; box-shadow: none !important;
+  }
+
+  .error-msg { display:none; color: var(--accent); font-size: 0.82rem; margin-bottom: 0.8rem; text-align: center; }
+
+  .final-hero { text-align: center; padding: 2rem 0 1.5rem; }
+  .final-hero .hero-label {
+    font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.8rem;
+  }
+  .final-hero .hero-word {
+    font-family: 'Playfair Display', serif; font-size: 3rem;
+    font-weight: 700; color: var(--ink); line-height: 1.1;
+  }
+
+  .restart-link {
+    display: block; text-align: center; margin-top: 1rem;
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
+    color: var(--muted); text-decoration: underline; text-underline-offset: 3px;
+  }
+
+  @media (max-width: 600px) {
+    .card { padding: 1.6rem 1.2rem; }
+    h1 { font-size: 1.5rem; }
+    .final-hero .hero-word { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- START -->
+  <div class="screen active" id="screen-start">
+    <div class="card">
+      <div class="eyebrow">Social Issues Activity</div>
+      <h1>What Issues Matter Most to You?</h1>
+      <p class="subtitle">
+        Browse a range of social issues organized by theme and select every one that feels meaningful to you.
+      </p>
+      <div class="divider">how it works</div>
+      <p class="subtitle" style="margin-bottom:2rem;">
+        After selecting at least 10 issues, you'll narrow your choices down to <strong>10</strong>,
+        then <strong>5</strong>, and finally your <strong>single most important issue</strong>.
+        There are no right or wrong answers — follow what resonates.
+      </p>
+      <button class="btn btn-primary" onclick="startActivity()">Begin the Activity →</button>
+    </div>
+  </div>
+
+  <!-- PHASE 1: SELECT -->
+  <div class="screen" id="screen-select">
+    <div class="card">
+      <div class="phase-tag">Phase 1 of 4 — Browse &amp; Select</div>
+      <h2>Select Every Issue That Matters to You</h2>
+      <div class="instruction-box">
+        Click any issue to select it — it will highlight. Click again to deselect.
+        Choose everything that resonates with you, even a little. You need <strong>at least 10</strong> to continue.
+      </div>
+      <div class="chip-counter">Selected: <strong id="select-count">0</strong></div>
+      <div id="issue-grid"></div>
+      <div class="error-msg" id="select-error">Please select at least 10 issues to continue.</div>
+      <button class="btn btn-primary" onclick="goToWhittle10()">Continue with my selections →</button>
+      <button class="restart-link" onclick="restart()">↩ Start Over</button>
+    </div>
+  </div>
+
+  <!-- PHASE 2: TO 10 -->
+  <div class="screen" id="screen-10">
+    <div class="card">
+      <div class="phase-tag">Phase 2 of 4 — Narrow to 10</div>
+      <h2>Narrow Down to 10</h2>
+      <div class="instruction-box">
+        You selected <strong id="selected-total">—</strong> issues. Eliminate down to your
+        <strong>top 10</strong>. Click an issue to cross it out; click again to restore it.
+      </div>
+      <div class="chip-counter">Remaining: <strong id="remaining-10">—</strong></div>
+      <div id="whittle-10-grid" class="chip-grid" style="margin-bottom:1.4rem;"></div>
+      <button class="btn btn-primary" id="btn-to-5" disabled>Continue with these 10 →</button>
+      <button class="restart-link" onclick="restart()">↩ Start Over</button>
+    </div>
+  </div>
+
+  <!-- PHASE 3: TO 5 -->
+  <div class="screen" id="screen-5">
+    <div class="card">
+      <div class="phase-tag">Phase 3 of 4 — Narrow to 5</div>
+      <h2>Your Top Five</h2>
+      <div class="instruction-box">
+        Getting closer. Eliminate down to your <strong>5 most important issues</strong>.
+        Click to cross out; click again to restore.
+      </div>
+      <div class="chip-counter">Remaining: <strong id="remaining-5">—</strong></div>
+      <div id="whittle-5-grid" class="chip-grid" style="margin-bottom:1.4rem;"></div>
+      <button class="btn btn-primary" id="btn-to-1" disabled>Continue with these 5 →</button>
+      <button class="restart-link" onclick="restart()">↩ Start Over</button>
+    </div>
+  </div>
+
+  <!-- PHASE 4: TO 1 -->
+  <div class="screen" id="screen-1">
+    <div class="card">
+      <div class="phase-tag">Phase 4 of 4 — Your #1 Issue</div>
+      <h2>The One That Matters Most</h2>
+      <div class="instruction-box">
+        The hardest step. Of these five, which single issue do you care about most deeply?
+        Eliminate four until only <strong>one remains</strong>.
+      </div>
+      <div class="chip-counter">Remaining: <strong id="remaining-1">—</strong></div>
+      <div id="whittle-1-grid" class="chip-grid" style="margin-bottom:1.4rem;"></div>
+      <button class="btn btn-primary" id="btn-to-final" disabled>This is my issue →</button>
+      <button class="restart-link" onclick="restart()">↩ Start Over</button>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div class="screen" id="screen-final">
+    <div class="card">
+      <div class="eyebrow">Activity Complete</div>
+      <div class="final-hero">
+        <div class="hero-label">Your #1 Social Issue</div>
+        <div class="hero-word" id="final-issue">—</div>
+      </div>
+      <div class="divider">reflect</div>
+      <p class="subtitle" style="margin-bottom:1.8rem;">
+        Consider: Why does this issue resonate with you above all others? What experiences
+        or values shape your concern? How might you take action — even in a small way?
+      </p>
+      <button class="btn btn-primary" onclick="restart()">← Start Over</button>
+    </div>
+  </div>
+
+</div>
+<script>
+// ═══════════════════════════════════════════════
+//  ISSUES — Edit categories and issues here
+// ═══════════════════════════════════════════════
+const CATEGORIES = [
+  {
+    category: "Economy & Work", color: "#2e7d52",
+    issues: ["Minimum Wage","Wealth Inequality","Unemployment","Worker Rights",
+             "Student Debt","Affordable Housing","Cost of Living","Gig Economy",
+             "Universal Basic Income","Tax Fairness"]
+  },
+  {
+    category: "Health & Wellbeing", color: "#1a5f8a",
+    issues: ["Healthcare Access","Mental Health Services","Addiction & Recovery",
+             "Maternal Health","Childhood Obesity","Vaccine Policy",
+             "Reproductive Rights","Elder Care","Disability Rights"]
+  },
+  {
+    category: "Environment & Climate", color: "#7b3fa0",
+    issues: ["Climate Change","Air Pollution","Water Quality","Deforestation",
+             "Plastic Waste","Renewable Energy","Animal Rights","Food Security",
+             "Biodiversity Loss"]
+  },
+  {
+    category: "Justice & Safety", color: "#c0392b",
+    issues: ["Criminal Justice Reform","Police Accountability","Gun Violence",
+             "Domestic Violence","Human Trafficking","Prison Reform",
+             "Juvenile Justice","Death Penalty","Drug Policy"]
+  },
+  {
+    category: "Education", color: "#b8860b",
+    issues: ["Access to Education","School Funding","Teacher Pay","School Safety",
+             "Curriculum & Book Bans","Early Childhood Education",
+             "Special Education","Digital Divide","Vocational Training"]
+  },
+  {
+    category: "Civil Rights & Equality", color: "#2e6b7a",
+    issues: ["Racial Equity","Gender Equality","LGBTQ+ Rights","Immigration Reform",
+             "Voting Rights","Religious Freedom","Indigenous Rights",
+             "Hate Crimes","Affirmative Action"]
+  },
+  {
+    category: "Technology & Society", color: "#8a4a1a",
+    issues: ["AI & Automation","Data Privacy","Social Media Harm","Misinformation",
+             "Cybersecurity","Digital Addiction","Surveillance","Tech Monopolies"]
+  },
+  {
+    category: "Global & Community", color: "#4a6e1a",
+    issues: ["Poverty","Hunger","Global Health","Refugees & Displacement",
+             "War & Conflict","Nuclear Weapons","Community Violence",
+             "Civic Engagement","Media Literacy"]
+  }
+];
+
+// ═══════════════════════════
+//  STATE
+// ═══════════════════════════
+let selectedIssues = [];
+let top10 = [];
+let top5 = [];
+let top1 = null;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  selectedIssues = []; top10 = []; top5 = []; top1 = null;
+  showScreen('screen-start');
+}
+
+// ═══════════════════════════
+//  PHASE 1
+// ═══════════════════════════
+function startActivity() {
+  buildSelectGrid();
+  showScreen('screen-select');
+}
+
+function buildSelectGrid() {
+  const grid = document.getElementById('issue-grid');
+  grid.innerHTML = '';
+  selectedIssues = [];
+  document.getElementById('select-count').textContent = '0';
+
+  CATEGORIES.forEach(cat => {
+    const section = document.createElement('div');
+    section.className = 'category-section';
+
+    const header = document.createElement('div');
+    header.className = 'category-header';
+
+    const label = document.createElement('span');
+    label.className = 'category-label';
+    label.textContent = cat.category;
+    label.style.background = cat.color;
+
+    const rule = document.createElement('div');
+    rule.className = 'category-rule';
+    rule.style.background = cat.color;
+
+    header.appendChild(label);
+    header.appendChild(rule);
+    section.appendChild(header);
+
+    const chipGrid = document.createElement('div');
+    chipGrid.className = 'chip-grid';
+
+    cat.issues.forEach(issue => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = issue;
+      chip.style.borderColor = cat.color;
+      chip.style.color = cat.color;
+
+      chip.onclick = () => {
+        if (chip.classList.contains('selected')) {
+          chip.classList.remove('selected');
+          chip.style.background = '#fff';
+          chip.style.color = cat.color;
+          selectedIssues = selectedIssues.filter(v => v.label !== issue);
+        } else {
+          chip.classList.add('selected');
+          chip.style.background = cat.color;
+          chip.style.color = '#fff';
+          selectedIssues.push({ label: issue, color: cat.color });
+        }
+        document.getElementById('select-count').textContent = selectedIssues.length;
+        document.getElementById('select-error').style.display = 'none';
+      };
+
+      chipGrid.appendChild(chip);
+    });
+
+    section.appendChild(chipGrid);
+    grid.appendChild(section);
+  });
+}
+
+function goToWhittle10() {
+  if (selectedIssues.length < 10) {
+    document.getElementById('select-error').style.display = 'block';
+    return;
+  }
+  if (selectedIssues.length === 10) {
+    top10 = [...selectedIssues];
+    document.getElementById('remaining-5').textContent = top10.length;
+    buildWhittleGrid('whittle-5-grid', 'remaining-5', 'btn-to-1', top10, 5, v2 => {
+      top5 = v2;
+      document.getElementById('remaining-1').textContent = top5.length;
+      buildWhittleGrid('whittle-1-grid', 'remaining-1', 'btn-to-final', top5, 1, v3 => {
+        top1 = v3[0];
+        showFinal();
+      });
+      showScreen('screen-1');
+    });
+    showScreen('screen-5');
+    return;
+  }
+  document.getElementById('selected-total').textContent = selectedIssues.length;
+  document.getElementById('remaining-10').textContent = selectedIssues.length;
+  buildWhittleGrid('whittle-10-grid', 'remaining-10', 'btn-to-5', selectedIssues, 10, v => {
+    top10 = v;
+    document.getElementById('remaining-5').textContent = top10.length;
+    buildWhittleGrid('whittle-5-grid', 'remaining-5', 'btn-to-1', top10, 5, v2 => {
+      top5 = v2;
+      document.getElementById('remaining-1').textContent = top5.length;
+      buildWhittleGrid('whittle-1-grid', 'remaining-1', 'btn-to-final', top5, 1, v3 => {
+        top1 = v3[0];
+        showFinal();
+      });
+      showScreen('screen-1');
+    });
+    showScreen('screen-5');
+  });
+  showScreen('screen-10');
+}
+
+// ═══════════════════════════
+//  WHITTLE ENGINE
+// ═══════════════════════════
+function buildWhittleGrid(gridId, counterId, btnId, source, target, onDone) {
+  const grid = document.getElementById(gridId);
+  const counter = document.getElementById(counterId);
+  const btn = document.getElementById(btnId);
+  grid.innerHTML = '';
+
+  const eliminated = new Set();
+  let remaining = source.length;
+
+  function refresh() {
+    counter.textContent = remaining;
+    btn.disabled = remaining !== target;
+  }
+
+  source.forEach((v, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = v.label;
+    chip.style.borderColor = v.color;
+    chip.style.color = v.color;
+
+    chip.onclick = () => {
+      if (eliminated.has(i)) {
+        chip.classList.remove('eliminated');
+        eliminated.delete(i);
+        remaining++;
+      } else {
+        if (remaining <= target) return;
+        chip.classList.add('eliminated');
+        eliminated.add(i);
+        remaining--;
+      }
+      refresh();
+    };
+    grid.appendChild(chip);
+  });
+
+  refresh();
+  btn.onclick = () => {
+    const kept = source.filter((_, i) => !eliminated.has(i));
+    onDone(kept);
+  };
+}
+
+// ═══════════════════════════
+//  FINAL
+// ═══════════════════════════
+function showFinal() {
+  document.getElementById('final-issue').textContent = top1 ? top1.label : '—';
+  showScreen('screen-final');
+}
+</script>
+</body>
+</html>
