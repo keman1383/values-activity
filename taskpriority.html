@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIORITIZE</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --border-bright: #444;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-muted: #555;
+    --critical: #ff3b3b;
+    --high: #ff8c00;
+    --medium: #f5c400;
+    --low: #4caf6e;
+    --accent: #5b8fff;
+    --done: #3a3a3a;
+    --done-text: #555;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255,255,255,0.013) 2px,
+      rgba(255,255,255,0.013) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  header {
+    border-bottom: 2px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.15em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .logo-dot {
+    width: 10px; height: 10px;
+    background: var(--critical);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .header-stats {
+    display: flex;
+    gap: 2rem;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .stat span {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* Layout */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* Add task bar */
+  .add-bar {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 0.75rem;
+  }
+
+  .add-bar input, .add-bar select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    padding: 0.6rem 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .add-bar input::placeholder { color: var(--text-muted); }
+
+  .add-bar input:focus, .add-bar select:focus {
+    border-color: var(--accent);
+  }
+
+  .add-bar select option { background: var(--surface2); }
+
+  .btn-add {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.12em;
+    padding: 0 1.4rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+
+  .btn-add:hover { background: #7aaaff; }
+  .btn-add:active { transform: scale(0.97); }
+
+  /* Filter bar */
+  .filter-bar {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .filter-btn:hover { border-color: var(--border-bright); color: var(--text); }
+  .filter-btn.active {
+    background: var(--surface2);
+    border-color: var(--border-bright);
+    color: var(--text);
+  }
+
+  .filter-btn.f-critical.active { border-color: var(--critical); color: var(--critical); }
+  .filter-btn.f-high.active { border-color: var(--high); color: var(--high); }
+  .filter-btn.f-medium.active { border-color: var(--medium); color: var(--medium); }
+  .filter-btn.f-low.active { border-color: var(--low); color: var(--low); }
+
+  /* Section labels */
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.4rem 0;
+    margin: 1.2rem 0 0.5rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .section-count {
+    background: var(--surface2);
+    padding: 0.1rem 0.5rem;
+    font-size: 0.65rem;
+  }
+
+  /* Task list */
+  .task-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .task-item {
+    display: grid;
+    grid-template-columns: 4px 1fr auto auto;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s, opacity 0.3s;
+    animation: slideIn 0.2s ease;
+    overflow: hidden;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .task-item:hover { border-color: var(--border-bright); }
+
+  .task-item.done { opacity: 0.4; }
+
+  .priority-bar {
+    width: 4px;
+    align-self: stretch;
+  }
+
+  .task-item[data-priority="critical"] .priority-bar { background: var(--critical); }
+  .task-item[data-priority="high"] .priority-bar { background: var(--high); }
+  .task-item[data-priority="medium"] .priority-bar { background: var(--medium); }
+  .task-item[data-priority="low"] .priority-bar { background: var(--low); }
+
+  .task-content {
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .task-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: color 0.2s;
+  }
+
+  .task-item.done .task-name {
+    text-decoration: line-through;
+    color: var(--done-text);
+  }
+
+  .task-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .tag-priority {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 0.1rem 0.45rem;
+  }
+
+  .task-item[data-priority="critical"] .tag-priority { color: var(--critical); }
+  .task-item[data-priority="high"] .tag-priority { color: var(--high); }
+  .task-item[data-priority="medium"] .tag-priority { color: var(--medium); }
+  .task-item[data-priority="low"] .tag-priority { color: var(--low); }
+
+  .task-date {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+  }
+
+  .task-actions {
+    display: flex;
+    gap: 2px;
+    padding: 0 0.75rem;
+  }
+
+  .btn-icon {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+
+  .btn-icon:hover { border-color: var(--border-bright); color: var(--text); }
+
+  .btn-check:hover { color: var(--low); border-color: var(--low); }
+  .btn-delete:hover { color: var(--critical); border-color: var(--critical); }
+
+  .task-item.done .btn-check { color: var(--low); }
+
+  /* Priority sort arrows */
+  .task-reorder {
+    display: flex;
+    flex-direction: column;
+    padding-right: 0.25rem;
+  }
+
+  .btn-icon.sm { width: 24px; height: 18px; font-size: 0.6rem; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1px dashed var(--border);
+  }
+
+  /* Sort bar */
+  .sort-bar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .sort-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-bottom: 1px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .sort-btn:hover, .sort-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .progress-bar-bg {
+    height: 3px;
+    background: var(--border);
+    width: 100%;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--low));
+    transition: width 0.4s ease;
+  }
+
+  /* Drag handle area */
+  .drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    padding: 0 0.5rem;
+    font-size: 0.8rem;
+    align-self: center;
+  }
+
+  .drag-handle:active { cursor: grabbing; }
+
+  .task-item.dragging { opacity: 0.4; border-style: dashed; }
+  .task-item.drag-over { border-color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    PRIORITIZE
+  </div>
+  <div class="header-stats">
+    <div class="stat">Tasks: <span id="stat-total">0</span></div>
+    <div class="stat">Done: <span id="stat-done">0</span></div>
+    <div class="stat">Critical: <span id="stat-critical">0</span></div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="add-bar">
+    <input type="text" id="task-input" placeholder="Add new task..." maxlength="120" />
+    <select id="priority-select">
+      <option value="critical">⬛ Critical</option>
+      <option value="high">⬛ High</option>
+      <option value="medium" selected>⬛ Medium</option>
+      <option value="low">⬛ Low</option>
+    </select>
+    <input type="date" id="date-input" style="max-width:160px" />
+    <button class="btn-add" id="add-btn">+ ADD</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;">
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn f-critical" data-filter="critical">Critical</button>
+      <button class="filter-btn f-high" data-filter="high">High</button>
+      <button class="filter-btn f-medium" data-filter="medium">Medium</button>
+      <button class="filter-btn f-low" data-filter="low">Low</button>
+      <button class="filter-btn" data-filter="done">Done</button>
+    </div>
+    <div class="sort-bar">
+      Sort:
+      <button class="sort-btn active" data-sort="priority">Priority</button>
+      <button class="sort-btn" data-sort="date">Date</button>
+      <button class="sort-btn" data-sort="name">Name</button>
+    </div>
+  </div>
+
+  <div id="task-container"></div>
+
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('tasks_v1') || '[]');
+let filter = 'all';
+let sort = 'priority';
+let dragSrcId = null;
+
+const PRIORITY_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
+const PRIORITY_LABEL = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+
+function save() {
+  localStorage.setItem('tasks_v1', JSON.stringify(tasks));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const name = input.value.trim();
+  if (!name) { input.focus(); return; }
+  const priority = document.getElementById('priority-select').value;
+  const date = document.getElementById('date-input').value;
+  tasks.unshift({ id: uid(), name, priority, date, done: false, created: Date.now() });
+  save();
+  input.value = '';
+  input.focus();
+  render();
+}
+
+function toggleDone(id) {
+  const t = tasks.find(t => t.id === id);
+  if (t) { t.done = !t.done; save(); render(); }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save(); render();
+}
+
+function updateStats() {
+  const total = tasks.length;
+  const done = tasks.filter(t => t.done).length;
+  const critical = tasks.filter(t => t.priority === 'critical' && !t.done).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-critical').textContent = critical;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+function getSorted(list) {
+  const s = [...list];
+  if (sort === 'priority') {
+    s.sort((a, b) => PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]);
+  } else if (sort === 'date') {
+    s.sort((a, b) => {
+      if (!a.date && !b.date) return 0;
+      if (!a.date) return 1;
+      if (!b.date) return -1;
+      return a.date.localeCompare(b.date);
+    });
+  } else if (sort === 'name') {
+    s.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  return s;
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const [y, m, day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+function isOverdue(d) {
+  if (!d) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return d < today;
+}
+
+function renderSection(label, items, container) {
+  if (!items.length) return;
+  const sec = document.createElement('div');
+  const lbl = document.createElement('div');
+  lbl.className = 'section-label';
+  lbl.innerHTML = `<span>${label}</span><span class="section-count">${items.length}</span>`;
+  sec.appendChild(lbl);
+  const list = document.createElement('div');
+  list.className = 'task-list';
+  items.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'task-item' + (t.done ? ' done' : '');
+    el.setAttribute('data-priority', t.priority);
+    el.setAttribute('data-id', t.id);
+    el.draggable = true;
+
+    const overdue = !t.done && isOverdue(t.date);
+    const dateStr = t.date
+      ? `<span class="task-date" style="${overdue ? 'color:var(--critical)' : ''}">${overdue ? '⚠ ' : ''}${formatDate(t.date)}</span>`
+      : '';
+
+    el.innerHTML = `
+      <div class="priority-bar"></div>
+      <div class="task-content">
+        <div class="task-name">${escHtml(t.name)}</div>
+        <div class="task-meta">
+          <span class="tag-priority">${PRIORITY_LABEL[t.priority]}</span>
+          ${dateStr}
+        </div>
+      </div>
+      <div class="task-actions">
+        <button class="btn-icon btn-check" title="Toggle done">✓</button>
+        <button class="btn-icon btn-delete" title="Delete">✕</button>
+      </div>
+    `;
+
+    el.querySelector('.btn-check').addEventListener('click', () => toggleDone(t.id));
+    el.querySelector('.btn-delete').addEventListener('click', () => deleteTask(t.id));
+
+    // Drag & drop
+    el.addEventListener('dragstart', e => {
+      dragSrcId = t.id;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('drag-over'); });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      el.classList.remove('drag-over');
+      if (dragSrcId && dragSrcId !== t.id) {
+        const fromIdx = tasks.findIndex(x => x.id === dragSrcId);
+        const toIdx = tasks.findIndex(x => x.id === t.id);
+        if (fromIdx !== -1 && toIdx !== -1) {
+          const [moved] = tasks.splice(fromIdx, 1);
+          tasks.splice(toIdx, 0, moved);
+          save(); render();
+        }
+      }
+    });
+
+    list.appendChild(el);
+  });
+  sec.appendChild(list);
+  container.appendChild(sec);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function render() {
+  updateStats();
+  const container = document.getElementById('task-container');
+  container.innerHTML = '';
+
+  let visible = [...tasks];
+  if (filter === 'done') {
+    visible = visible.filter(t => t.done);
+  } else if (filter !== 'all') {
+    visible = visible.filter(t => t.priority === filter && !t.done);
+  } else {
+    // "all" = not done
+    visible = visible.filter(t => !t.done);
+  }
+
+  const sorted = getSorted(visible);
+
+  if (!sorted.length) {
+    container.innerHTML = `<div class="empty-state">No tasks here. Add something above.</div>`;
+    return;
+  }
+
+  if (filter === 'all' && sort === 'priority') {
+    ['critical','high','medium','low'].forEach(p => {
+      const group = sorted.filter(t => t.priority === p);
+      if (group.length) renderSection(PRIORITY_LABEL[p], group, container);
+    });
+  } else if (filter === 'done') {
+    renderSection('Completed', sorted, container);
+  } else {
+    renderSection(filter === 'all' ? 'Tasks' : PRIORITY_LABEL[filter], sorted, container);
+  }
+}
+
+// Filter buttons
+document.getElementById('filter-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  filter = btn.dataset.filter;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+});
+
+// Sort buttons
+document.querySelectorAll('.sort-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    sort = btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  });
+});
+
+// Add button & enter key
+document.getElementById('add-btn').addEventListener('click', addTask);
+document.getElementById('task-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+// Set today as default date
+document.getElementById('date-input').value = new Date().toISOString().slice(0, 10);
+
+render();
+</script>
+</body>
+</html>
